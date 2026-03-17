@@ -33,6 +33,49 @@ const MainContainer = ({ children }: PropsWithChildren) => {
     };
   }, [isDesktopView]);
 
+  // Auto-scroll throughout the entire page (minimum speed, no manual scroll)
+  useEffect(() => {
+    let autoScrollActive = true;
+    const autoScrollRef = { current: 0 };
+
+    const preventScroll = (event: Event) => {
+      if (!autoScrollActive) return;
+      event.preventDefault();
+    };
+
+    const startAutoScroll = () => {
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const speed = 0.5; // pixels per frame
+
+      const step = () => {
+        if (!autoScrollActive) return;
+        const next = Math.min(window.scrollY + speed, maxScroll);
+        window.scrollTo({ top: next });
+        if (next < maxScroll) {
+          autoScrollRef.current = requestAnimationFrame(step);
+        } else {
+          autoScrollActive = false;
+        }
+      };
+
+      autoScrollRef.current = requestAnimationFrame(step);
+    };
+
+    const delay = 1200;
+    const timer = window.setTimeout(startAutoScroll, delay);
+
+    window.addEventListener("wheel", preventScroll, { passive: false });
+    window.addEventListener("touchmove", preventScroll, { passive: false });
+
+    return () => {
+      window.clearTimeout(timer);
+      autoScrollActive = false;
+      cancelAnimationFrame(autoScrollRef.current);
+      window.removeEventListener("wheel", preventScroll);
+      window.removeEventListener("touchmove", preventScroll);
+    };
+  }, []);
+
   useEffect(() => {
     if (!isDesktopView) return;
     const observer = new IntersectionObserver(
