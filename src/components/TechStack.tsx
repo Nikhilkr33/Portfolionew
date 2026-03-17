@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
@@ -10,8 +9,15 @@ import {
   CylinderCollider,
   RapierRigidBody,
 } from "@react-three/rapier";
+import {
+  TextureLoader,
+  SphereGeometry,
+  Vector3,
+  MathUtils,
+  MeshPhysicalMaterial,
+} from "three";
 
-const textureLoader = new THREE.TextureLoader();
+const textureLoader = new TextureLoader();
 const imageUrls = [
   "/images/react2.webp",
   "/images/next2.webp",
@@ -24,24 +30,24 @@ const imageUrls = [
 ];
 const textures = imageUrls.map((url) => textureLoader.load(url));
 
-const sphereGeometry = new THREE.SphereGeometry(1, 28, 28);
+const sphereGeometry = new SphereGeometry(1, 28, 28);
 
 const spheres = [...Array(30)].map(() => ({
   scale: [0.7, 1, 0.8, 1, 1][Math.floor(Math.random() * 5)],
 }));
 
 type SphereProps = {
-  vec?: THREE.Vector3;
+  vec?: Vector3;
   scale: number;
-  r?: typeof THREE.MathUtils.randFloatSpread;
-  material: THREE.MeshPhysicalMaterial;
+  r?: typeof MathUtils.randFloatSpread;
+  material: MeshPhysicalMaterial;
   isActive: boolean;
 };
 
 function SphereGeo({
-  vec = new THREE.Vector3(),
+  vec = new Vector3(),
   scale,
-  r = THREE.MathUtils.randFloatSpread,
+  r = MathUtils.randFloatSpread,
   material,
   isActive,
 }: SphereProps) {
@@ -54,7 +60,7 @@ function SphereGeo({
       .copy(api.current!.translation())
       .normalize()
       .multiply(
-        new THREE.Vector3(
+        new Vector3(
           -50 * delta * scale,
           -150 * delta * scale,
           -50 * delta * scale
@@ -92,17 +98,17 @@ function SphereGeo({
 }
 
 type PointerProps = {
-  vec?: THREE.Vector3;
+  vec?: Vector3;
   isActive: boolean;
 };
 
-function Pointer({ vec = new THREE.Vector3(), isActive }: PointerProps) {
+function Pointer({ vec = new Vector3(), isActive }: PointerProps) {
   const ref = useRef<RapierRigidBody>(null);
 
   useFrame(({ pointer, viewport }) => {
     if (!isActive) return;
     const targetVec = vec.lerp(
-      new THREE.Vector3(
+      new Vector3(
         (pointer.x * viewport.width) / 2,
         (pointer.y * viewport.height) / 2,
         0
@@ -130,9 +136,7 @@ const TechStack = () => {
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY || document.documentElement.scrollTop;
-      const threshold = document
-        .getElementById("work")!
-        .getBoundingClientRect().top;
+      const threshold = document.getElementById("work")?.getBoundingClientRect().top ?? 0;
       setIsActive(scrollY > threshold);
     };
     document.querySelectorAll(".header a").forEach((elem) => {
@@ -154,7 +158,7 @@ const TechStack = () => {
   const materials = useMemo(() => {
     return textures.map(
       (texture) =>
-        new THREE.MeshPhysicalMaterial({
+        new MeshPhysicalMaterial({
           map: texture,
           emissive: "#ffffff",
           emissiveMap: texture,
