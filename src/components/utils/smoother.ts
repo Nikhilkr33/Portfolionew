@@ -1,3 +1,2 @@
-import { ScrollSmoother } from "gsap-trial/ScrollSmoother";
-
-export const smootherState: { current?: ScrollSmoother } = {};
+// This file is kept for backwards compatibility. ScrollSmoother was removed.
+export const smootherState = {};
