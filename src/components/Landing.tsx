@@ -1,37 +1,30 @@
-import { PropsWithChildren, useEffect, useRef } from "react";
+import { PropsWithChildren, useEffect } from "react";
 import "./styles/Landing.css";
 
 const Landing = ({ children }: PropsWithChildren) => {
-  const autoScrollRef = useRef<number | null>(null);
-  const userInteractedRef = useRef(false);
 
   useEffect(() => {
-    const stopAutoScroll = () => {
-      userInteractedRef.current = true;
-      if (autoScrollRef.current) {
-        cancelAnimationFrame(autoScrollRef.current);
-        autoScrollRef.current = null;
-      }
-    };
+    let autoScrollActive = true;
+    const autoScrollRef = { current: 0 };
 
-    const onUserScroll = () => {
-      stopAutoScroll();
+    const preventScroll = (event: Event) => {
+      if (!autoScrollActive) return;
+      event.preventDefault();
     };
-
-    window.addEventListener("wheel", onUserScroll, { passive: true });
-    window.addEventListener("touchstart", onUserScroll, { passive: true });
 
     const startAutoScroll = () => {
       const maxScroll = document.body.scrollHeight - window.innerHeight;
-      const target = Math.min(maxScroll, window.innerHeight * 0.9);
-      const speed = 0.5; // pixels per frame (adjust for slower/faster)
+      const target = Math.min(maxScroll, window.innerHeight * 1.2);
+      const speed = 0.6; // pixels per frame (adjust for slower/faster)
 
       const step = () => {
-        if (userInteractedRef.current) return;
+        if (!autoScrollActive) return;
         const next = Math.min(window.scrollY + speed, target);
         window.scrollTo({ top: next });
         if (next < target) {
           autoScrollRef.current = requestAnimationFrame(step);
+        } else {
+          autoScrollActive = false;
         }
       };
 
@@ -39,15 +32,17 @@ const Landing = ({ children }: PropsWithChildren) => {
     };
 
     const delay = window.innerWidth > 768 ? 1200 : 800;
-    const timer = window.setTimeout(() => {
-      if (!userInteractedRef.current) startAutoScroll();
-    }, delay);
+    const timer = window.setTimeout(startAutoScroll, delay);
+
+    window.addEventListener("wheel", preventScroll, { passive: false });
+    window.addEventListener("touchmove", preventScroll, { passive: false });
 
     return () => {
       window.clearTimeout(timer);
-      stopAutoScroll();
-      window.removeEventListener("wheel", onUserScroll);
-      window.removeEventListener("touchstart", onUserScroll);
+      autoScrollActive = false;
+      cancelAnimationFrame(autoScrollRef.current);
+      window.removeEventListener("wheel", preventScroll);
+      window.removeEventListener("touchmove", preventScroll);
     };
   }, []);
 
